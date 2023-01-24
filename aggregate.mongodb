@@ -136,3 +136,105 @@ db.products.aggregate([
 
 // Pagination
 db.products.find().limit(3).skip(2);
+
+
+
+db.createCollection('students', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['firstName', 'lastName', 'groupId'],
+            properties: {
+                firstName: {
+                    bsonType: "string",
+                    description: "'firstName' must be a string and is required"
+                },
+                lastName: {
+                    bsonType: "string",
+                    description: "'lastName' must be a string and is required"
+                },
+                email: {
+                    bsonType: "string",
+                    description: "'email' must be a string and is required"
+                },
+                groupId: {
+                    bsonType: 'objectId'
+                }
+            }
+        }
+    }
+});
+
+db.createCollection('groups', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['name', 'professorName'],
+            properties: {
+                name: {
+                    bsonType: 'string',
+                },
+                professorName: {
+                    bsonType: 'string'
+                }
+            }
+        }
+    }
+});
+
+
+db.groups.insertMany([
+    {
+        name: 'math',
+        professorName: 'isaac newton'
+    },
+        {
+        name: 'philosophy',
+        professorName: 'aristotle'
+    }
+]);
+
+db.students.insertMany([
+    {
+        firstName: 'Alex',
+        lastName: "Black",
+        groupId: new ObjectId('63cfe450248e9bc1d64aedb0')
+    },
+        {
+        firstName: 'Drake',
+        lastName: "White",
+        groupId: new ObjectId('63cfe450248e9bc1d64aedb0')
+    }, {
+        firstName: 'Kolin',
+        lastName: "Blue",
+        groupId: new ObjectId('63cfe450248e9bc1d64aedb1')
+    }, {
+        firstName: 'Max',
+        lastName: "Ding",
+        groupId: new ObjectId('63cfe450248e9bc1d64aedb1')
+    }
+]);
+
+
+db.students.aggregate([
+    {
+        $lookup: {
+          from: 'groups',
+          localField: 'groupId',
+          foreignField: '_id',
+          as: 'group'
+        }
+    }, {
+        $unwind: "$group"
+    }, {
+        $unset: 'groupId'
+    }, {
+        $group: {
+          _id: "$group.name",
+          countStudents: {
+            $sum: 1
+          }
+        }
+    }
+]);
+
