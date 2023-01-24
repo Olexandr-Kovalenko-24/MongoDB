@@ -1,0 +1,113 @@
+db.createCollection('manufacturers', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['name'],
+            properties: {
+                name: {
+                    bsonType: 'string',
+                },
+                address: {
+                    bsonType: 'object',
+                    required: ['country', 'city']
+                }
+            }
+        }
+    }
+});
+
+db.manufacturers.insertMany([
+    {
+        name: 'first'
+    },
+    {
+        name: 'second',
+        address: {
+            country: 'UA',
+            city: 'Zp'
+        }
+    }
+]);
+
+db.createCollection('products', {
+    validator: {
+        $jsonSchema: {
+            bsonType: 'object',
+            required: ['name', 'price', 'amount', 'manufacturerId'],
+            properties: {
+                name: {
+                    bsonType: 'string',
+                },
+                price: {
+                    bsonType: 'double',
+                },
+                amount: {
+                    bsonType: 'int',
+                },
+                expiredDate: {
+                    bsonType: 'date'
+                },
+                manufacturerId: {
+                    bsonType: 'objectId'
+                }
+            }
+        }
+    }
+});
+
+
+db.products.insertOne({
+        name: 'phone',
+        price: 1200.20,
+        amount: 3,
+        manufacturerId: new ObjectId('63cfd3424e9283895246e282')
+});
+
+db.products.insertMany([
+    {
+        name: 'phone3',
+        price: 1800.30,
+        amount: 6,
+        manufacturerId: new ObjectId('63cfd3424e9283895246e281')
+    },
+        {
+        name: 'phone2',
+        price: 12000.40,
+        amount: 13,
+        manufacturerId: new ObjectId('63cfd3424e9283895246e281')
+    }
+]);
+
+db.products.aggregate([
+    {
+        /**
+         * from: The target collection.
+         * localField: The local join field.
+         * foreignField: The target join field.
+         * as: The name for the results.
+         * pipeline: Optional pipeline to run on the foreign collection.
+         * let: Optional variables to use in the pipeline field stages.
+         */
+        $lookup: {
+          from: 'manufacturers',
+          localField: 'manufacturerId',
+          foreignField: '_id',
+          as: 'manufacturer'
+        }
+    }, {
+        /**
+         * path: Path to the array field.
+         * includeArrayIndex: Optional name for index.
+         * preserveNullAndEmptyArrays: Optional
+         *   toggle to unwind null and empty values.
+         */
+        $unwind: "$manufacturer"
+    }, {
+        /**
+         * Provide the field name to exclude.
+         * To exclude multiple fields, pass the field names in an array.
+         */
+        $unset: 'manufacturerId'
+    }
+]);
+
