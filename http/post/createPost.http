@@ -1,0 +1,6 @@
+POST http://localhost:5000/api/posts/63cfce1e45fd631a32eb4e82 HTTP/1.1
+Content-Type: application/json
+
+{
+    "body": "my 5 post"
+}
